@@ -17,7 +17,9 @@ def get_access_token():
     access_token = os.getenv("TWITCH_ACCESS_TOKEN")
     if access_token:
         return access_token
+    return generate_access_token()
     
+def generate_access_token():
     # Generate an access token for authenticating requests
     auth_body = {
         "client_id": client_id,
@@ -39,6 +41,17 @@ def get_headers():
         "Authorization": f"Bearer {get_access_token()}"
     }
     return headers
+
+def validate_access_token(token):
+    validate_headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    try:
+        res = requests.get(url="https://id.twitch.tv/oauth2/validate", headers=validate_headers)
+        res_json = res.json()
+        return res.status_code == requests.codes.ok and res_json["client_id"] == client_id
+    except:
+        return False
 
 def verify_signature(req):
     hmac_message = req.headers['Twitch-Eventsub-Message-Id'] + req.headers['Twitch-Eventsub-Message-Timestamp'] + req.data.decode()
